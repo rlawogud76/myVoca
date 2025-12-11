@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영어 단어 퀴즈</title>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .header { text-align: center; margin-bottom: 30px; }
+        .score { font-size: 18px; color: #666; margin-bottom: 10px; }
+        .mode-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        .progress-bar {
+            width: 100%; height: 10px; background: #e0e0e0;
+            border-radius: 5px; overflow: hidden; margin-bottom: 20px;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+        .word-card {
+            text-align: center; padding: 25px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px; margin-bottom: 25px; position: relative;
+        }
+        .word { font-size: 38px; font-weight: bold; color: #333; margin-bottom: 5px; }
+        .word.meaning-mode { font-size: 22px; line-height: 1.4; }
+        .pronunciation { font-size: 16px; color: #667eea; margin-bottom: 8px; font-style: italic; }
+        .synonym { font-size: 13px; color: #888; margin-bottom: 5px; }
+        .hint { font-size: 14px; color: #888; }
+        .tip-btn {
+            position: absolute; top: 10px; right: 10px;
+            background: #ff9800; color: white; border: none;
+            padding: 8px 15px; border-radius: 20px; cursor: pointer;
+            font-size: 14px; transition: all 0.2s;
+        }
+        .tip-btn:hover { background: #f57c00; transform: scale(1.05); }
+        .tip-box {
+            margin-top: 15px; padding: 12px; background: #fff3e0;
+            border-radius: 10px; font-size: 14px; color: #e65100;
+            border-left: 4px solid #ff9800; text-align: left;
+            display: none;
+        }
+        .tip-box.show { display: block; }
+        .options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .option {
+            padding: 18px 15px; border: 2px solid #e0e0e0; border-radius: 12px;
+            background: white; cursor: pointer; transition: all 0.2s ease;
+            font-size: 15px; text-align: center;
+        }
+        .option:hover {
+            border-color: #667eea; transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+        .option.correct { background: #4CAF50; border-color: #4CAF50; color: white; }
+        .option.wrong { background: #f44336; border-color: #f44336; color: white; }
+        .option.disabled { pointer-events: none; }
+        .result { text-align: center; padding: 40px; }
+        .result h2 { font-size: 32px; margin-bottom: 20px; color: #333; }
+        .result .final-score {
+            font-size: 64px; font-weight: bold;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent; margin-bottom: 20px;
+        }
+        .btn {
+            padding: 15px 30px; font-size: 16px; border: none; border-radius: 10px;
+            cursor: pointer; background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white; transition: transform 0.2s, box-shadow 0.2s;
+            margin: 5px;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4); }
+        .btn-secondary { background: linear-gradient(135deg, #ff9800, #f57c00); }
+        .btn-small { padding: 10px 20px; font-size: 14px; }
+        .hidden { display: none; }
+        .start-section { text-align: center; padding: 30px 20px; }
+        .start-section h1 { font-size: 32px; margin-bottom: 15px; color: #333; }
+        .start-section p { color: #666; margin-bottom: 20px; font-size: 16px; }
+        .mode-buttons { display: flex; flex-direction: column; gap: 15px; align-items: center; margin-bottom: 20px; }
+        .mode-btn {
+            width: 100%; max-width: 300px; padding: 20px; border: 2px solid #e0e0e0;
+            border-radius: 15px; background: white; cursor: pointer;
+            transition: all 0.2s; text-align: left;
+        }
+        .mode-btn:hover { border-color: #667eea; transform: translateY(-3px); box-shadow: 0 8px 25px rgba(102,126,234,0.2); }
+        .mode-btn h3 { color: #333; margin-bottom: 5px; font-size: 18px; }
+        .mode-btn p { color: #888; font-size: 13px; margin: 0; }
+        .wordlist-selector { margin: 20px 0; text-align: center; }
+        .wordlist-selector select {
+            padding: 12px 20px; font-size: 16px; border: 2px solid #e0e0e0;
+            border-radius: 10px; background: white; cursor: pointer; min-width: 200px;
+        }
+        .checklist-section { margin-top: 20px; }
+        .flashcard-section { text-align: center; }
+        .flashcard-header { margin-bottom: 20px; }
+        .flashcard-counter { font-size: 16px; color: #666; margin-bottom: 10px; }
+        .flashcard {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 20px; padding: 40px 30px; min-height: 280px;
+            display: flex; flex-direction: column; justify-content: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 25px;
+            cursor: pointer; transition: transform 0.3s;
+        }
+        .flashcard:hover { transform: scale(1.02); }
+        .flashcard-word { font-size: 42px; font-weight: bold; color: #333; margin-bottom: 15px; }
+        .flashcard-pron { font-size: 18px; color: #667eea; font-style: italic; margin-bottom: 20px; }
+        .flashcard-meaning { font-size: 22px; color: #444; margin-bottom: 15px; line-height: 1.5; }
+        .flashcard-syn { font-size: 14px; color: #888; }
+        .flashcard-tip {
+            margin-top: 15px; padding: 12px; background: #fff3e0;
+            border-radius: 10px; font-size: 14px; color: #e65100;
+            border-left: 4px solid #ff9800; text-align: left;
+        }
+        .flashcard-nav { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; }
+        .nav-btn {
+            padding: 12px 25px; font-size: 16px; border: none; border-radius: 10px;
+            cursor: pointer; background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white; transition: all 0.2s;
+        }
+        .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102,126,234,0.3); }
+        .nav-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .sound-btns { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .sound-btn {
+            padding: 10px 20px; font-size: 14px; border: 2px solid #667eea;
+            border-radius: 25px; background: white; color: #667eea;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .sound-btn:hover { background: #667eea; color: white; }
+        .sound-btn.active { background: #667eea; color: white; }
+        .repeat-settings {
+            display: flex; justify-content: center; align-items: center; gap: 15px;
+            margin-bottom: 15px; flex-wrap: wrap;
+        }
+        .repeat-settings label { color: #666; font-size: 14px; }
+        .repeat-settings select, .repeat-settings input {
+            padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px;
+            font-size: 14px; width: 70px;
+        }
+        .repeat-status {
+            text-align: center; color: #667eea; font-size: 14px; margin-bottom: 10px;
+        }
+        .checklist-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; flex-wrap: wrap; gap: 10px;
+        }
+        .checklist-header h3 { color: #333; font-size: 18px; }
+        .checklist-stats { color: #666; font-size: 14px; }
+        .checklist-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 8px; max-height: 300px; overflow-y: auto;
+            border: 1px solid #e0e0e0; border-radius: 10px; padding: 15px;
+        }
+        .checklist-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 12px; background: #f8f9fa; border-radius: 8px;
+            cursor: pointer; transition: all 0.2s; font-size: 14px;
+        }
+        .checklist-item:hover { background: #e9ecef; }
+        .checklist-item.checked { background: #d4edda; text-decoration: line-through; color: #888; }
+        .checklist-item input { cursor: pointer; width: 18px; height: 18px; }
+        .checklist-actions { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="start-section" class="start-section">
+            <h1>📚 영어 단어 퀴즈</h1>
+            <p>토익 필수 영단어를 학습해보세요!</p>
+            
+            <div class="wordlist-selector">
+                <select id="wordlist-select" onchange="changeWordlist()">
+                    <option value="list1">📘 단어장 1 (99개)</option>
+                    <option value="list2">📗 단어장 2 (100개)</option>
+                </select>
+            </div>
+            
+            <div class="mode-buttons">
+                <div class="mode-btn" onclick="startQuiz('word')">
+                    <h3>🔤 단어 → 뜻</h3>
+                    <p>영어 단어를 보고 뜻을 맞추세요</p>
+                </div>
+                <div class="mode-btn" onclick="startQuiz('meaning')">
+                    <h3>📝 뜻 → 단어</h3>
+                    <p>한글 뜻을 보고 영어 단어를 맞추세요</p>
+                </div>
+                <div class="mode-btn" onclick="showVocabList()">
+                    <h3>📖 단어장 보기</h3>
+                    <p>전체 단어 목록을 확인하세요</p>
+                </div>
+            </div>
+            
+            <div class="checklist-section">
+                <div class="checklist-header">
+                    <h3>✅ 아는 단어 체크</h3>
+                    <span class="checklist-stats" id="checklist-stats">0개 체크됨</span>
+                </div>
+                <div class="checklist-grid" id="checklist-grid"></div>
+                <div class="checklist-actions">
+                    <button class="btn btn-small" onclick="selectAll()">전체 선택</button>
+                    <button class="btn btn-small btn-secondary" onclick="deselectAll()">전체 해제</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="quiz-section" class="hidden">
+            <div class="header">
+                <div class="mode-badge" id="mode-badge">단어 → 뜻</div>
+                <div class="score">문제 <span id="current">1</span> / <span id="total">99</span> | 점수: <span id="score">0</span></div>
+                <div class="progress-bar"><div class="progress" id="progress"></div></div>
+            </div>
+            <div class="word-card">
+                <button class="tip-btn" onclick="showTip()" id="tip-btn">💡 TIP</button>
+                <div class="word" id="word"></div>
+                <div class="pronunciation" id="pronunciation"></div>
+                <div class="synonym" id="synonym"></div>
+                <div class="hint" id="hint"></div>
+                <div class="tip-box" id="tip-box"></div>
+            </div>
+            <div class="options" id="options"></div>
+        </div>
+        
+        <div id="result-section" class="result hidden">
+            <h2>🎉 퀴즈 완료!</h2>
+            <div class="final-score"><span id="final-score">0</span>%</div>
+            <p style="margin-bottom:30px;color:#666;">총 <span id="correct-count">0</span>개 정답</p>
+            <button class="btn" onclick="startQuiz(currentMode)">다시 도전하기</button>
+            <button class="btn btn-secondary" onclick="goHome()">모드 선택</button>
+        </div>
+        
+        <div id="vocablist-section" class="hidden flashcard-section">
+            <div class="flashcard-header">
+                <div class="flashcard-counter"><span id="card-current">1</span> / <span id="card-total">99</span></div>
+            </div>
+            <div class="repeat-settings">
+                <label>반복 횟수:</label>
+                <select id="repeat-count">
+                    <option value="1">1회</option>
+                    <option value="2">2회</option>
+                    <option value="3" selected>3회</option>
+                    <option value="5">5회</option>
+                    <option value="10">10회</option>
+                </select>
+                <label>간격(초):</label>
+                <input type="number" id="repeat-interval" value="2" min="1" max="10">
+            </div>
+            <div class="repeat-status" id="repeat-status"></div>
+            <div class="sound-btns">
+                <button class="sound-btn" onclick="speakWord()">🔊 단어</button>
+                <button class="sound-btn" onclick="speakMeaning()">🔊 뜻</button>
+                <button class="sound-btn" onclick="speakBoth()">🔊 전체</button>
+                <button class="sound-btn" id="auto-btn" onclick="toggleAutoPlay()">🔁 자동 재생</button>
+                <button class="sound-btn" onclick="stopAutoPlay()">⏹ 정지</button>
+            </div>
+            <div class="flashcard" onclick="flipCard()">
+                <div class="flashcard-word" id="fc-word"></div>
+                <div class="flashcard-pron" id="fc-pron"></div>
+                <div class="flashcard-meaning" id="fc-meaning"></div>
+                <div class="flashcard-syn" id="fc-syn"></div>
+                <div class="flashcard-tip" id="fc-tip"></div>
+            </div>
+            <div class="flashcard-nav">
+                <button class="nav-btn" id="prev-btn" onclick="prevCard()">◀ 이전</button>
+                <button class="nav-btn" onclick="shuffleCards()">🔀 섞기</button>
+                <button class="nav-btn" id="next-btn" onclick="nextCard()">다음 ▶</button>
+            </div>
+            <button class="btn btn-secondary" onclick="goHome()">돌아가기</button>
+        </div>
+    </div>
+<script>
+const wordlist1 = [
+    {word: "implement", meaning: "시행하다, 실행하다 / 도구", tip: "im(안에) + ple(채우다) = 실행하다", pron: "[ímplәmènt]", syn: "execute, carry out"},
+    {word: "postpone", meaning: "연기하다, 미루다", tip: "post(뒤에) + pone(놓다) = 미루다", pron: "[poustpóun]", syn: "delay, defer"},
+    {word: "regarding", meaning: "~에 대하여, ~에 관하여", tip: "regard(관심) + ing = ~에 관하여", pron: "[rigáːrdiŋ]", syn: "concerning, about"},
+    {word: "approximately", meaning: "대략, 약, 거의", tip: "ap + proxim(가까운) = 대략", pron: "[әpràksәmәtli]", syn: "about, roughly"},
+    {word: "accommodate", meaning: "수용하다, 숙박시키다", tip: "com(함께) + mod(방식) = 수용하다", pron: "[әkámәdèit]", syn: "house, lodge"},
+    {word: "submit", meaning: "제출하다, 복종하다", tip: "sub(아래로) + mit(보내다) = 제출하다", pron: "[sәbmít]", syn: "present, hand in"},
+    {word: "authorize", meaning: "승인하다, 권한을 부여하다", tip: "author(권위) + ize = 승인하다", pron: "[ɔ́ːθәràiz]", syn: "approve, permit"},
+    {word: "personnel", meaning: "직원, 인원, 인사과", tip: "person(사람) + nel = 직원", pron: "[pə̀ːrsәnél]", syn: "staff, employees"},
+    {word: "recruit", meaning: "채용하다 / 신입사원", tip: "re(다시) + cruit(자라다) = 채용하다", pron: "[rikrúːt]", syn: "hire, enlist"},
+    {word: "conduct", meaning: "실시하다, 수행하다 / 행동", tip: "con(함께) + duct(이끌다) = 수행하다", pron: "[kәndʌ́kt]", syn: "carry out, perform"},
+    {word: "expand", meaning: "확장하다, 팽창하다", tip: "ex(밖으로) + pand(펼치다) = 확장하다", pron: "[ikspǽnd]", syn: "extend, enlarge"},
+    {word: "revenue", meaning: "수익, 수입, 세입", tip: "re(돌아오다) + venue(오다) = 수익", pron: "[révәnjùː]", syn: "income, earnings"},
+    {word: "merger", meaning: "합병, 통합", tip: "merge(합치다) + er = 합병", pron: "[mə́ːrdʒәr]", syn: "consolidation, union"},
+    {word: "profitable", meaning: "수익성이 있는, 유익한", tip: "profit(이익) + able = 수익성 있는", pron: "[prάfitәbl]", syn: "lucrative, gainful"},
+    {word: "manufacture", meaning: "제조하다 / 제조", tip: "manu(손) + fact(만들다) = 제조하다", pron: "[mæ̀njufǽktʃәr]", syn: "produce, make"},
+    {word: "inventory", meaning: "재고, 재고목록", tip: "in(안에) + vent(오다) = 재고", pron: "[ínvәntɔ̀ːri]", syn: "stock, supplies"},
+    {word: "complaint", meaning: "불만, 항의, 고소", tip: "com(완전히) + plain(울다) = 불만", pron: "[kәmpléint]", syn: "grievance, objection"},
+    {word: "refund", meaning: "환불(하다) / 환불금", tip: "re(다시) + fund(자금) = 환불", pron: "[ríːfʌnd]", syn: "reimburse, repay"},
+    {word: "warranty", meaning: "보증(서), 품질보증", tip: "warrant(보증하다) + y = 보증서", pron: "[wɔ́ːrәnti]", syn: "guarantee, assurance"},
+    {word: "reimburse", meaning: "상환하다, 변제하다", tip: "re + burse(지갑) = 상환", pron: "[rìːimbə́ːrs]", syn: "repay, refund"},
+    {word: "comply", meaning: "따르다, 준수하다", tip: "com(함께) + ply(채우다) = 따르다", pron: "[kәmplái]", syn: "obey, follow"},
+    {word: "regulation", meaning: "규정, 규제, 단속", tip: "regul(규칙) + ation = 규정", pron: "[règjuléiʃәn]", syn: "rule, law"},
+    {word: "inspect", meaning: "검사하다, 조사하다", tip: "in(안을) + spect(보다) = 검사하다", pron: "[inspékt]", syn: "examine, check"},
+    {word: "maintenance", meaning: "유지, 보수, 관리", tip: "main + tain(잡다) = 유지", pron: "[méintәnәns]", syn: "upkeep, care"},
+    {word: "facility", meaning: "시설, 설비", tip: "facil(쉬운) + ity = 시설", pron: "[fәsílәti]", syn: "building, equipment"},
+    {word: "relocate", meaning: "이전하다, 재배치하다", tip: "re(다시) + locate = 이전", pron: "[rìːloukéit]", syn: "move, transfer"},
+    {word: "renovate", meaning: "개조하다, 보수하다", tip: "re(다시) + nov(새로운) = 개조하다", pron: "[rénәvèit]", syn: "restore, refurbish"},
+    {word: "premises", meaning: "건물, 구내, 부지", tip: "pre(앞에) + mise(놓다) = 건물", pron: "[prémisiz]", syn: "property, building"},
+    {word: "itinerary", meaning: "여행일정, 여정", tip: "iter(여행) + ary = 여행일정", pron: "[aitínәrèri]", syn: "schedule, route"},
+    {word: "destination", meaning: "목적지, 도착지", tip: "destin(정해진) + ation = 목적지", pron: "[dèstәnéiʃәn]", syn: "goal, target"},
+    {word: "departure", meaning: "출발, 떠남", tip: "de(떠나다) + part = 출발", pron: "[dipáːrtʃәr]", syn: "leaving, exit"},
+    {word: "confirm", meaning: "확인하다, 확정하다", tip: "con(완전히) + firm(단단한) = 확인", pron: "[kәnfə́ːrm]", syn: "verify, validate"},
+    {word: "reservation", meaning: "예약, 보류", tip: "reserve + ation = 예약", pron: "[rèzәrvéiʃәn]", syn: "booking"},
+    {word: "tentative", meaning: "임시의, 잠정적인", tip: "tent(시도) + ative = 잠정적인", pron: "[téntәtiv]", syn: "provisional, temporary"},
+    {word: "agenda", meaning: "의제, 안건, 예정표", tip: "ag(행동) + enda = 의제", pron: "[әdʒéndә]", syn: "schedule, program"},
+    {word: "attend", meaning: "참석하다, 출석하다", tip: "at + tend(뻗다) = 참석하다", pron: "[әténd]", syn: "participate, join"},
+    {word: "reschedule", meaning: "일정을 변경하다", tip: "re(다시) + schedule = 일정 변경", pron: "[rìːskédʒuːl]", syn: "postpone, rearrange"},
+    {word: "notify", meaning: "알리다, 통지하다", tip: "not(알다) + ify = 통지하다", pron: "[nóutәfài]", syn: "inform, alert"},
+    {word: "acknowledge", meaning: "인정하다, 확인하다", tip: "ac + knowledge = 인정하다", pron: "[æknάlidʒ]", syn: "admit, recognize"},
+    {word: "encounter", meaning: "마주치다, 직면하다", tip: "en + counter(반대) = 마주치다", pron: "[inkáuntәr]", syn: "meet, face"},
+    {word: "overcome", meaning: "극복하다, 이겨내다", tip: "over(넘어) + come = 극복하다", pron: "[òuvәrkʌ́m]", syn: "conquer, defeat"},
+    {word: "substantial", meaning: "상당한, 실질적인", tip: "sub + stance(서다) = 실질적인", pron: "[sәbstǽnʃәl]", syn: "significant, solid"},
+    {word: "exceptional", meaning: "뛰어난, 예외적인", tip: "ex + cept(잡다) = 예외적인", pron: "[iksépʃәnәl]", syn: "outstanding, remarkable"},
+    {word: "thoroughly", meaning: "철저히, 완전히", tip: "thorough + ly = 철저하게", pron: "[θə́ːrouli]", syn: "completely, fully"},
+    {word: "promptly", meaning: "즉시, 신속히", tip: "prompt + ly = 즉각적으로", pron: "[prάmptli]", syn: "immediately, quickly"},
+    {word: "efficient", meaning: "효율적인, 능률적인", tip: "ef + fic(만들다) = 효율적인", pron: "[ifíʃәnt]", syn: "effective, productive"},
+    {word: "mandatory", meaning: "의무적인, 필수의", tip: "mand(명령) + atory = 의무적인", pron: "[mǽndәtɔ̀ːri]", syn: "compulsory, required"},
+    {word: "appropriate", meaning: "적절한, 알맞은", tip: "ap + propri(자신의) = 적절한", pron: "[әpróupriәt]", syn: "suitable, proper"},
+    {word: "demonstrate", meaning: "증명하다, 시연하다", tip: "de + monstr(보여주다) = 증명", pron: "[démәnstrèit]", syn: "show, prove"},
+    {word: "acquire", meaning: "획득하다, 취득하다", tip: "ac + quire(찾다) = 획득하다", pron: "[әkwáiәr]", syn: "obtain, gain"},
+    {word: "allocate", meaning: "할당하다, 배정하다", tip: "al + loc(장소) = 할당하다", pron: "[ǽlәkèit]", syn: "assign, distribute"},
+    {word: "anticipate", meaning: "예상하다, 기대하다", tip: "anti(앞서) + cip(잡다) = 예상하다", pron: "[æntísәpèit]", syn: "expect, foresee"},
+    {word: "adequate", meaning: "충분한, 적정한", tip: "ad + equ(같은) = 충분한", pron: "[ǽdikwit]", syn: "sufficient, enough"},
+    {word: "adjacent", meaning: "인접한, 이웃한", tip: "ad + jac(던지다) = 인접한", pron: "[әdʒéisәnt]", syn: "neighboring, nearby"},
+    {word: "attain", meaning: "달성하다, 이루다", tip: "at + tain(잡다) = 달성하다", pron: "[әtéin]", syn: "achieve, reach"},
+    {word: "beneficial", meaning: "유익한, 이로운", tip: "bene(좋은) + fic = 유익한", pron: "[bènәfíʃәl]", syn: "helpful, advantageous"},
+    {word: "competent", meaning: "유능한, 능숙한", tip: "com + pet(추구) = 유능한", pron: "[kάmpәtәnt]", syn: "capable, skilled"},
+    {word: "consecutive", meaning: "연속적인, 계속되는", tip: "con + secut(따르다) = 연속적인", pron: "[kәnsékjutiv]", syn: "successive, sequential"},
+    {word: "consolidate", meaning: "통합하다, 강화하다", tip: "con + solid = 통합하다", pron: "[kәnsάlәdèit]", syn: "combine, merge"},
+    {word: "considerable", meaning: "상당한, 많은", tip: "consider + able = 상당한", pron: "[kәnsídәrәbl]", syn: "significant, substantial"},
+    {word: "coordinate", meaning: "조정하다, 협력하다", tip: "co + ordin(순서) = 조정", pron: "[kouɔ́ːrdәnèit]", syn: "organize, arrange"},
+    {word: "credible", meaning: "믿을만한, 신뢰할 수 있는", tip: "cred(믿다) + ible = 믿을 수 있는", pron: "[krédәbl]", syn: "believable, trustworthy"},
+    {word: "crucial", meaning: "중요한, 결정적인", tip: "cruc(십자가) + ial = 중요한", pron: "[krúːʃәl]", syn: "critical, vital"},
+    {word: "cumulative", meaning: "누적된, 누적적인", tip: "cumul(쌓다) + ative = 누적된", pron: "[kjúːmjәlәtiv]", syn: "accumulated, collective"},
+    {word: "decline", meaning: "거절하다, 감소하다", tip: "de + cline(기울다) = 감소", pron: "[dikláin]", syn: "refuse, decrease"},
+    {word: "defective", meaning: "결함이 있는, 불량의", tip: "de + fect(만들다) = 결함있는", pron: "[diféktiv]", syn: "faulty, flawed"},
+    {word: "deliberate", meaning: "신중한, 고의적인", tip: "de + liber(저울) = 신중한", pron: "[dilíbәrit]", syn: "intentional, careful"},
+    {word: "designate", meaning: "지정하다, 명명하다", tip: "de + sign(표시) = 지정", pron: "[dézignèit]", syn: "appoint, assign"},
+    {word: "detect", meaning: "발견하다, 감지하다", tip: "de + tect(덮다) = 발견하다", pron: "[ditékt]", syn: "discover, find"},
+    {word: "deteriorate", meaning: "악화되다, 저하되다", tip: "de + terior(나쁜) = 악화되다", pron: "[ditíәriәrèit]", syn: "worsen, decline"},
+    {word: "discrepancy", meaning: "불일치, 차이, 모순", tip: "dis + crep(소리) = 불일치", pron: "[diskrépәnsi]", syn: "difference, gap"},
+    {word: "distribute", meaning: "분배하다, 유통하다", tip: "dis + tribute(주다) = 분배", pron: "[distríbjuːt]", syn: "allocate, deliver"},
+    {word: "duration", meaning: "기간, 지속시간", tip: "dur(지속) + ation = 기간", pron: "[djuréiʃәn]", syn: "period, length"},
+    {word: "elaborate", meaning: "정교한, 상세한", tip: "e + labor(노동) = 정교한", pron: "[ilǽbәrit]", syn: "detailed, complex"},
+    {word: "eligible", meaning: "자격이 있는, 적격의", tip: "e + lig(선택) = 자격있는", pron: "[élidʒәbl]", syn: "qualified, entitled"},
+    {word: "eliminate", meaning: "제거하다, 없애다", tip: "e + limin(문턱) = 제거", pron: "[ilímәnèit]", syn: "remove, exclude"},
+    {word: "endorse", meaning: "지지하다, 보증하다", tip: "en + dorse(등) = 지지", pron: "[indɔ́ːrs]", syn: "support, approve"},
+    {word: "enforce", meaning: "시행하다, 집행하다", tip: "en + force(힘) = 시행하다", pron: "[infɔ́ːrs]", syn: "implement, apply"},
+    {word: "enhance", meaning: "향상시키다, 높이다", tip: "en + hance(높은) = 향상", pron: "[inhǽns]", syn: "improve, boost"},
+    {word: "equivalent", meaning: "동등한, 상응하는", tip: "equi(같은) + val(가치) = 동등한", pron: "[ikwívәlәnt]", syn: "equal, same"},
+    {word: "estimate", meaning: "추정하다, 견적을 내다", tip: "estim(가치) + ate = 추정하다", pron: "[éstәmèit]", syn: "calculate, assess"},
+    {word: "evaluate", meaning: "평가하다, 사정하다", tip: "e + valu(가치) = 평가하다", pron: "[ivǽljuèit]", syn: "assess, judge"},
+    {word: "exempt", meaning: "면제된, 면제하다", tip: "ex + empt(사다) = 면제", pron: "[igzémpt]", syn: "excuse, release"},
+    {word: "explicit", meaning: "명확한, 명시적인", tip: "ex + plic(접다) = 명확한", pron: "[iksplísit]", syn: "clear, direct"},
+    {word: "feasible", meaning: "실행가능한, 타당한", tip: "feas(하다) + ible = 실행가능한", pron: "[fíːzәbl]", syn: "possible, practical"},
+    {word: "fluctuate", meaning: "변동하다, 오르내리다", tip: "fluct(흐르다) + uate = 변동하다", pron: "[flʌ́ktʃuèit]", syn: "vary, change"},
+    {word: "fulfill", meaning: "이행하다, 충족시키다", tip: "full + fill = 이행하다", pron: "[fulfíl]", syn: "accomplish, complete"},
+    {word: "genuine", meaning: "진짜의, 진정한", tip: "gen(태어나다) + uine = 진짜의", pron: "[dʒénjuin]", syn: "authentic, real"},
+    {word: "grant", meaning: "승인, 허가하다 / 보조금", tip: "grant = 주다, 허락하다", pron: "[grǽnt]", syn: "give, award"},
+    {word: "hamper", meaning: "방해하다, 저해하다", tip: "hamper = 바구니 → 방해하다", pron: "[hǽmpәr]", syn: "hinder, obstruct"},
+    {word: "impose", meaning: "부과하다, 강요하다", tip: "im + pose(놓다) = 부과하다", pron: "[impóuz]", syn: "enforce, apply"},
+    {word: "incur", meaning: "초래하다, 발생시키다", tip: "in + cur(달리다) = 초래", pron: "[inkə́ːr]", syn: "bring on, cause"},
+    {word: "inevitable", meaning: "불가피한, 피할 수 없는", tip: "in + evit(피하다) = 불가피한", pron: "[inévәtәbl]", syn: "unavoidable, certain"},
+    {word: "inferior", meaning: "열등한, 하급의", tip: "infer(아래) + ior = 열등한", pron: "[infíәriәr]", syn: "lower, lesser"},
+    {word: "initial", meaning: "최초의, 처음의", tip: "init(시작) + ial = 최초의", pron: "[iníʃәl]", syn: "first, original"},
+    {word: "integrate", meaning: "통합하다, 결합하다", tip: "integr(전체) + ate = 통합하다", pron: "[íntәgrèit]", syn: "combine, merge"},
+    {word: "intermittent", meaning: "간헐적인, 단속적인", tip: "inter + mit(보내다) = 간헐적", pron: "[ìntәrmítәnt]", syn: "sporadic, occasional"},
+    {word: "legitimate", meaning: "합법적인, 정당한", tip: "legit(법) + imate = 합법적인", pron: "[lidʒítәmit]", syn: "legal, lawful"},
+    {word: "leverage", meaning: "영향력, 지렛대 작용", tip: "lever(지렛대) + age = 영향력", pron: "[lévәridʒ]", syn: "influence, power"}
+];
+
+const wordlist2 = [
+    {word: "abolish", meaning: "폐지하다, 철폐하다", tip: "ab(떨어져) + olish = 폐지하다", pron: "[әbάliʃ]", syn: "eliminate, end"},
+    {word: "abundant", meaning: "풍부한, 많은", tip: "ab + und(파도) = 풍부한", pron: "[әbʌ́ndәnt]", syn: "plentiful, ample"},
+    {word: "accelerate", meaning: "가속하다, 촉진하다", tip: "ac + celer(빠른) = 가속하다", pron: "[æksélәrèit]", syn: "speed up, hasten"},
+    {word: "accessible", meaning: "접근 가능한, 이용 가능한", tip: "access + ible = 접근 가능한", pron: "[æksésәbl]", syn: "available, reachable"},
+    {word: "accomplish", meaning: "성취하다, 달성하다", tip: "ac + complish = 성취하다", pron: "[әkάmpliʃ]", syn: "achieve, complete"},
+    {word: "accountable", meaning: "책임이 있는, 설명할 의무가 있는", tip: "account + able = 책임있는", pron: "[әkáuntәbl]", syn: "responsible, liable"},
+    {word: "accumulate", meaning: "축적하다, 모으다", tip: "ac + cumul(쌓다) = 축적하다", pron: "[әkjúːmjulèit]", syn: "gather, collect"},
+    {word: "accurate", meaning: "정확한, 정밀한", tip: "ac + cur(주의) = 정확한", pron: "[ǽkjurit]", syn: "precise, exact"},
+    {word: "adhere", meaning: "고수하다, 들러붙다", tip: "ad + here(붙다) = 고수하다", pron: "[әdhíәr]", syn: "stick, follow"},
+    {word: "adversely", meaning: "불리하게, 역으로", tip: "adverse + ly = 불리하게", pron: "[ædvə́ːrsli]", syn: "negatively, harmfully"},
+    {word: "advocate", meaning: "옹호하다, 지지하다 / 옹호자", tip: "ad + voc(부르다) = 옹호하다", pron: "[ǽdvәkèit]", syn: "support, promote"},
+    {word: "affiliate", meaning: "제휴하다 / 계열사", tip: "af + fili(아들) = 제휴하다", pron: "[әfílieit]", syn: "associate, partner"},
+    {word: "aggregate", meaning: "합계, 총액 / 집합하다", tip: "ag + greg(무리) = 합계", pron: "[ǽgrigit]", syn: "total, sum"},
+    {word: "alleviate", meaning: "완화하다, 경감하다", tip: "al + levi(가벼운) = 완화하다", pron: "[әlíːvieit]", syn: "ease, relieve"},
+    {word: "ambiguous", meaning: "모호한, 애매한", tip: "ambi(양쪽) + guous = 모호한", pron: "[æmbígjuәs]", syn: "unclear, vague"},
+    {word: "amend", meaning: "수정하다, 개정하다", tip: "a + mend(고치다) = 수정하다", pron: "[әménd]", syn: "revise, modify"},
+    {word: "ample", meaning: "충분한, 넉넉한", tip: "ample = 넓은 → 충분한", pron: "[ǽmpl]", syn: "sufficient, plenty"},
+    {word: "anonymous", meaning: "익명의, 무명의", tip: "an(없는) + onym(이름) = 익명의", pron: "[әnάnәmәs]", syn: "unnamed, unknown"},
+    {word: "apparatus", meaning: "기구, 장치, 기관", tip: "ap + paratus = 장치", pron: "[æ̀pәrǽtәs]", syn: "device, equipment"},
+    {word: "applicable", meaning: "적용 가능한, 해당되는", tip: "apply + able = 적용 가능한", pron: "[әplíkәbl]", syn: "relevant, suitable"},
+    {word: "appraisal", meaning: "평가, 감정", tip: "appraise + al = 평가", pron: "[әpréizәl]", syn: "evaluation, assessment"},
+    {word: "apprentice", meaning: "견습생, 수습생", tip: "ap + prent(배우다) = 견습생", pron: "[әpréntis]", syn: "trainee, learner"},
+    {word: "arbitrary", meaning: "임의의, 독단적인", tip: "arbitr(판단) + ary = 임의의", pron: "[áːrbitrèri]", syn: "random, subjective"},
+    {word: "aspire", meaning: "열망하다, 갈망하다", tip: "a + spire(숨쉬다) = 열망하다", pron: "[әspáiәr]", syn: "desire, aim"},
+    {word: "assert", meaning: "주장하다, 단언하다", tip: "as + sert(연결) = 주장하다", pron: "[әsə́ːrt]", syn: "claim, declare"},
+    {word: "assess", meaning: "평가하다, 사정하다", tip: "as + sess(앉다) = 평가하다", pron: "[әsés]", syn: "evaluate, judge"},
+    {word: "asset", meaning: "자산, 재산, 장점", tip: "as + set = 자산", pron: "[ǽset]", syn: "property, resource"},
+    {word: "assign", meaning: "할당하다, 배정하다", tip: "as + sign(표시) = 할당하다", pron: "[әsáin]", syn: "allocate, appoint"},
+    {word: "assure", meaning: "보장하다, 확신시키다", tip: "as + sure(확실한) = 보장하다", pron: "[әʃúәr]", syn: "guarantee, ensure"},
+    {word: "attribute", meaning: "~의 탓으로 돌리다 / 속성", tip: "at + tribute(주다) = 속성", pron: "[әtríbjuːt]", syn: "quality, characteristic"},
+    {word: "audit", meaning: "감사하다 / 회계감사", tip: "audit = 듣다 → 감사하다", pron: "[ɔ́ːdit]", syn: "examine, inspect"},
+    {word: "authentic", meaning: "진짜의, 진정한", tip: "auth(권위) + entic = 진짜의", pron: "[ɔːθéntik]", syn: "genuine, real"},
+    {word: "autonomous", meaning: "자율적인, 자치의", tip: "auto(스스로) + nom(법) = 자율적인", pron: "[ɔːtάnәmәs]", syn: "independent, self-governing"},
+    {word: "bankrupt", meaning: "파산한 / 파산시키다", tip: "bank + rupt(깨진) = 파산한", pron: "[bǽŋkrʌpt]", syn: "insolvent, broke"},
+    {word: "benchmark", meaning: "기준, 표준 / 기준을 세우다", tip: "bench + mark = 기준", pron: "[béntʃmàːrk]", syn: "standard, reference"},
+    {word: "bilateral", meaning: "양자간의, 쌍방의", tip: "bi(둘) + lateral(측면) = 양자간의", pron: "[bailǽtәrәl]", syn: "mutual, two-sided"},
+    {word: "breach", meaning: "위반, 침해 / 위반하다", tip: "breach = 깨다 → 위반", pron: "[briːtʃ]", syn: "violation, break"},
+    {word: "brochure", meaning: "소책자, 안내서", tip: "brochure = 작은 책자", pron: "[brouʃúәr]", syn: "pamphlet, leaflet"},
+    {word: "budget", meaning: "예산 / 예산을 세우다", tip: "budget = 가방 → 예산", pron: "[bʌ́dʒit]", syn: "funds, allocation"},
+    {word: "bureaucracy", meaning: "관료제, 관료주의", tip: "bureau(사무실) + cracy = 관료제", pron: "[bjuәrάkrәsi]", syn: "administration, red tape"},
+    {word: "capacity", meaning: "용량, 능력, 수용력", tip: "cap(잡다) + acity = 용량", pron: "[kәpǽsәti]", syn: "ability, volume"},
+    {word: "catastrophe", meaning: "재앙, 대참사", tip: "cata(아래로) + strophe = 재앙", pron: "[kәtǽstrәfi]", syn: "disaster, calamity"},
+    {word: "cease", meaning: "중단하다, 그만두다", tip: "cease = 멈추다", pron: "[siːs]", syn: "stop, halt"},
+    {word: "certify", meaning: "증명하다, 인증하다", tip: "cert(확실한) + ify = 증명하다", pron: "[sə́ːrtәfài]", syn: "verify, confirm"},
+    {word: "chronic", meaning: "만성적인, 고질적인", tip: "chron(시간) + ic = 만성적인", pron: "[krάnik]", syn: "persistent, long-term"},
+    {word: "circulate", meaning: "순환하다, 유통하다", tip: "circul(원) + ate = 순환하다", pron: "[sə́ːrkjulèit]", syn: "distribute, spread"},
+    {word: "clarify", meaning: "명확히 하다, 설명하다", tip: "clar(맑은) + ify = 명확히 하다", pron: "[klǽrәfài]", syn: "explain, elucidate"},
+    {word: "clause", meaning: "조항, 절", tip: "clause = 닫다 → 조항", pron: "[klɔːz]", syn: "provision, article"},
+    {word: "coincide", meaning: "일치하다, 동시에 일어나다", tip: "co + incide(떨어지다) = 일치하다", pron: "[kòuinsáid]", syn: "match, correspond"},
+    {word: "collaborate", meaning: "협력하다, 공동 작업하다", tip: "col + labor(노동) = 협력하다", pron: "[kәlǽbәrèit]", syn: "cooperate, work together"},
+    {word: "collateral", meaning: "담보, 부수적인", tip: "col + lateral(측면) = 담보", pron: "[kәlǽtәrәl]", syn: "security, guarantee"},
+    {word: "commence", meaning: "시작하다, 개시하다", tip: "com + mence(시작) = 시작하다", pron: "[kәméns]", syn: "begin, start"},
+    {word: "commodity", meaning: "상품, 물품, 원자재", tip: "com + mod(방식) = 상품", pron: "[kәmάdәti]", syn: "goods, product"},
+    {word: "compatible", meaning: "호환되는, 양립하는", tip: "com + pat(느끼다) = 호환되는", pron: "[kәmpǽtәbl]", syn: "consistent, harmonious"},
+    {word: "compensate", meaning: "보상하다, 보충하다", tip: "com + pens(무게) = 보상하다", pron: "[kάmpәnsèit]", syn: "reimburse, repay"},
+    {word: "compile", meaning: "편집하다, 수집하다", tip: "com + pile(쌓다) = 편집하다", pron: "[kәmpáil]", syn: "gather, collect"},
+    {word: "complement", meaning: "보완하다 / 보완물", tip: "com + ple(채우다) = 보완하다", pron: "[kάmplәmәnt]", syn: "complete, supplement"},
+    {word: "comprehensive", meaning: "포괄적인, 종합적인", tip: "com + prehens(잡다) = 포괄적인", pron: "[kàmprihénsiv]", syn: "thorough, complete"},
+    {word: "compromise", meaning: "타협하다 / 타협", tip: "com + promise = 타협하다", pron: "[kάmprәmàiz]", syn: "settle, negotiate"},
+    {word: "compulsory", meaning: "의무적인, 강제적인", tip: "com + puls(밀다) = 의무적인", pron: "[kәmpʌ́lsәri]", syn: "mandatory, required"},
+    {word: "concede", meaning: "인정하다, 양보하다", tip: "con + cede(가다) = 인정하다", pron: "[kәnsíːd]", syn: "admit, acknowledge"},
+    {word: "conceive", meaning: "생각해내다, 임신하다", tip: "con + ceive(잡다) = 생각해내다", pron: "[kәnsíːv]", syn: "imagine, devise"},
+    {word: "concurrent", meaning: "동시에 일어나는", tip: "con + curr(달리다) = 동시의", pron: "[kәnkə́ːrәnt]", syn: "simultaneous, parallel"},
+    {word: "confidential", meaning: "기밀의, 비밀의", tip: "confide + ential = 기밀의", pron: "[kànfidénʃәl]", syn: "secret, private"},
+    {word: "conform", meaning: "따르다, 순응하다", tip: "con + form(형태) = 따르다", pron: "[kәnfɔ́ːrm]", syn: "comply, follow"},
+    {word: "confront", meaning: "직면하다, 맞서다", tip: "con + front(앞) = 직면하다", pron: "[kәnfrʌ́nt]", syn: "face, encounter"},
+    {word: "consensus", meaning: "합의, 의견 일치", tip: "con + sens(느끼다) = 합의", pron: "[kәnsénsәs]", syn: "agreement, accord"},
+    {word: "consent", meaning: "동의하다 / 동의", tip: "con + sent(느끼다) = 동의하다", pron: "[kәnsént]", syn: "agree, approve"},
+    {word: "consequence", meaning: "결과, 영향", tip: "con + sequ(따르다) = 결과", pron: "[kάnsikwèns]", syn: "result, outcome"},
+    {word: "conserve", meaning: "보존하다, 절약하다", tip: "con + serve(지키다) = 보존하다", pron: "[kәnsə́ːrv]", syn: "preserve, save"},
+    {word: "consistent", meaning: "일관된, 한결같은", tip: "con + sist(서다) = 일관된", pron: "[kәnsístәnt]", syn: "steady, constant"},
+    {word: "constitute", meaning: "구성하다, 이루다", tip: "con + stitute(세우다) = 구성하다", pron: "[kάnstәtjùːt]", syn: "form, compose"},
+    {word: "constraint", meaning: "제약, 제한", tip: "con + strain(당기다) = 제약", pron: "[kәnstréint]", syn: "restriction, limitation"},
+    {word: "consult", meaning: "상담하다, 참고하다", tip: "con + sult(조언) = 상담하다", pron: "[kәnsʌ́lt]", syn: "advise, confer"},
+    {word: "contemplate", meaning: "숙고하다, 심사숙고하다", tip: "con + templ(사원) = 숙고하다", pron: "[kάntәmplèit]", syn: "consider, ponder"},
+    {word: "contingency", meaning: "우발 사태, 비상사태", tip: "con + ting(접촉) = 우발 사태", pron: "[kәntíndʒәnsi]", syn: "emergency, possibility"},
+    {word: "contradict", meaning: "모순되다, 반박하다", tip: "contra(반대) + dict(말하다) = 모순되다", pron: "[kàntrәdíkt]", syn: "oppose, deny"},
+    {word: "controversy", meaning: "논쟁, 논란", tip: "contra + vers(돌다) = 논쟁", pron: "[kάntrәvə̀ːrsi]", syn: "debate, dispute"},
+    {word: "convene", meaning: "소집하다, 모이다", tip: "con + vene(오다) = 소집하다", pron: "[kәnvíːn]", syn: "assemble, gather"},
+    {word: "conventional", meaning: "전통적인, 관습적인", tip: "convent + ional = 전통적인", pron: "[kәnvénʃәnәl]", syn: "traditional, standard"},
+    {word: "convey", meaning: "전달하다, 운반하다", tip: "con + vey(길) = 전달하다", pron: "[kәnvéi]", syn: "communicate, transport"},
+    {word: "corporate", meaning: "기업의, 법인의", tip: "corpor(몸) + ate = 기업의", pron: "[kɔ́ːrpәrit]", syn: "business, company"},
+    {word: "correspond", meaning: "일치하다, 서신을 교환하다", tip: "cor + respond = 일치하다", pron: "[kɔ̀ːrәspάnd]", syn: "match, communicate"},
+    {word: "counterfeit", meaning: "위조의 / 위조하다", tip: "counter + feit(만들다) = 위조의", pron: "[káuntәrfìt]", syn: "fake, forged"},
+    {word: "criterion", meaning: "기준, 표준", tip: "crit(판단) + erion = 기준", pron: "[kraitíәriәn]", syn: "standard, measure"},
+    {word: "curtail", meaning: "삭감하다, 단축하다", tip: "curt(짧은) + ail = 삭감하다", pron: "[kәːrtéil]", syn: "reduce, cut"},
+    {word: "deadline", meaning: "마감일, 기한", tip: "dead + line = 마감일", pron: "[dédlàin]", syn: "due date, time limit"},
+    {word: "deem", meaning: "~라고 여기다, 간주하다", tip: "deem = 판단하다", pron: "[diːm]", syn: "consider, regard"},
+    {word: "default", meaning: "불이행, 기본값 / 불이행하다", tip: "de + fault(잘못) = 불이행", pron: "[difɔ́ːlt]", syn: "failure, neglect"},
+    {word: "defer", meaning: "연기하다, 미루다", tip: "de + fer(운반하다) = 연기하다", pron: "[difə́ːr]", syn: "postpone, delay"},
+    {word: "deficit", meaning: "적자, 부족", tip: "de + fic(만들다) = 적자", pron: "[défisit]", syn: "shortage, shortfall"},
+    {word: "delegate", meaning: "위임하다 / 대표자", tip: "de + leg(보내다) = 위임하다", pron: "[déligèit]", syn: "assign, representative"},
+    {word: "demolish", meaning: "철거하다, 파괴하다", tip: "de + mol(쌓다) = 철거하다", pron: "[dimάliʃ]", syn: "destroy, tear down"},
+    {word: "denote", meaning: "나타내다, 의미하다", tip: "de + note(표시) = 나타내다", pron: "[dinóut]", syn: "indicate, signify"},
+    {word: "depict", meaning: "묘사하다, 그리다", tip: "de + pict(그리다) = 묘사하다", pron: "[dipíkt]", syn: "describe, portray"},
+    {word: "deplete", meaning: "고갈시키다, 소모하다", tip: "de + plete(채우다) = 고갈시키다", pron: "[diplíːt]", syn: "exhaust, drain"},
+    {word: "deposit", meaning: "예금, 보증금 / 예금하다", tip: "de + posit(놓다) = 예금", pron: "[dipάzit]", syn: "payment, down payment"},
+    {word: "depreciate", meaning: "가치가 떨어지다, 감가상각하다", tip: "de + preci(가격) = 감가상각", pron: "[dipríːʃièit]", syn: "devalue, decrease"},
+    {word: "derive", meaning: "얻다, 유래하다", tip: "de + rive(강) = 유래하다", pron: "[diráiv]", syn: "obtain, originate"},
+    {word: "designate", meaning: "지정하다, 임명하다", tip: "de + sign(표시) = 지정하다", pron: "[dézignèit]", syn: "appoint, assign"}
+];
+
+let vocabulary = wordlist1;
+let checkedWords = new Set();
+let currentQuestion = 0;
+let score = 0;
+let questions = [];
+let currentMode = 'word';
+let quizLength = 0;
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function getStorageKey() {
+    const select = document.getElementById('wordlist-select');
+    return 'checkedWords_' + select.value;
+}
+
+function saveCheckedWords() {
+    localStorage.setItem(getStorageKey(), JSON.stringify([...checkedWords]));
+}
+
+function loadCheckedWords() {
+    const saved = localStorage.getItem(getStorageKey());
+    checkedWords = saved ? new Set(JSON.parse(saved)) : new Set();
+}
+
+function changeWordlist() {
+    const select = document.getElementById('wordlist-select');
+    vocabulary = select.value === 'list1' ? wordlist1 : wordlist2;
+    loadCheckedWords();
+    renderChecklist();
+}
+
+function renderChecklist() {
+    const grid = document.getElementById('checklist-grid');
+    grid.innerHTML = vocabulary.map((item, i) => `
+        <label class="checklist-item ${checkedWords.has(i) ? 'checked' : ''}" onclick="toggleCheck(${i}, event)">
+            <input type="checkbox" ${checkedWords.has(i) ? 'checked' : ''}>
+            <span>${item.word}</span>
+        </label>
+    `).join('');
+    updateStats();
+}
+
+function toggleCheck(index, event) {
+    event.preventDefault();
+    if (checkedWords.has(index)) {
+        checkedWords.delete(index);
+    } else {
+        checkedWords.add(index);
+    }
+    saveCheckedWords();
+    renderChecklist();
+}
+
+function selectAll() {
+    vocabulary.forEach((_, i) => checkedWords.add(i));
+    saveCheckedWords();
+    renderChecklist();
+}
+
+function deselectAll() {
+    checkedWords.clear();
+    saveCheckedWords();
+    renderChecklist();
+}
+
+function updateStats() {
+    const remaining = vocabulary.length - checkedWords.size;
+    document.getElementById('checklist-stats').textContent = `${checkedWords.size}개 체크됨 (${remaining}개 출제)`;
+}
+
+function generateQuestions() {
+    const availableWords = vocabulary.filter((_, i) => !checkedWords.has(i));
+    if (availableWords.length === 0) {
+        alert('출제할 단어가 없습니다. 체크를 해제해주세요.');
+        return false;
+    }
+    
+    const shuffled = shuffle([...availableWords]);
+    quizLength = shuffled.length;
+    
+    questions = shuffled.map(item => {
+        if (currentMode === 'word') {
+            let wrongAnswers = vocabulary
+                .filter(v => v.word !== item.word)
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 3)
+                .map(v => v.meaning);
+            let options = shuffle([item.meaning, ...wrongAnswers]);
+            return { display: item.word, correct: item.meaning, options, tip: item.tip, pron: item.pron, syn: item.syn };
+        } else {
+            let wrongAnswers = vocabulary
+                .filter(v => v.word !== item.word)
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 3)
+                .map(v => v.word);
+            let options = shuffle([item.word, ...wrongAnswers]);
+            return { display: item.meaning, correct: item.word, options, tip: item.tip, pron: item.pron, syn: item.syn };
+        }
+    });
+    return true;
+}
+
+function showTip() {
+    document.getElementById('tip-box').classList.toggle('show');
+}
+
+function showQuestion() {
+    const q = questions[currentQuestion];
+    const wordEl = document.getElementById('word');
+    wordEl.textContent = q.display;
+    
+    if (currentMode === 'meaning') {
+        wordEl.classList.add('meaning-mode');
+        document.getElementById('pronunciation').textContent = '';
+        document.getElementById('synonym').textContent = '';
+        document.getElementById('tip-btn').style.display = 'none';
+    } else {
+        wordEl.classList.remove('meaning-mode');
+        document.getElementById('pronunciation').textContent = q.pron;
+        document.getElementById('synonym').textContent = '유의어: ' + q.syn;
+        document.getElementById('tip-btn').style.display = 'block';
+    }
+    
+    document.getElementById('hint').textContent = `${currentQuestion + 1}번째 문제`;
+    document.getElementById('current').textContent = currentQuestion + 1;
+    document.getElementById('total').textContent = quizLength;
+    document.getElementById('progress').style.width = `${(currentQuestion / quizLength) * 100}%`;
+    document.getElementById('tip-box').textContent = q.tip;
+    document.getElementById('tip-box').classList.remove('show');
+    
+    document.getElementById('options').innerHTML = q.options.map((opt, i) => 
+        `<div class="option" onclick="checkAnswer(${i})">${opt}</div>`
+    ).join('');
+}
+
+function checkAnswer(index) {
+    const q = questions[currentQuestion];
+    const options = document.querySelectorAll('.option');
+    
+    options.forEach((opt, i) => {
+        opt.classList.add('disabled');
+        if (q.options[i] === q.correct) opt.classList.add('correct');
+        else if (i === index) opt.classList.add('wrong');
+    });
+    
+    if (q.options[index] === q.correct) score++;
+    document.getElementById('score').textContent = score;
+    
+    setTimeout(() => {
+        currentQuestion++;
+        if (currentQuestion < quizLength) showQuestion();
+        else showResult();
+    }, 1000);
+}
+
+function showResult() {
+    document.getElementById('quiz-section').classList.add('hidden');
+    document.getElementById('result-section').classList.remove('hidden');
+    document.getElementById('final-score').textContent = Math.round((score / quizLength) * 100);
+    document.getElementById('correct-count').textContent = score;
+}
+
+function goHome() {
+    document.getElementById('result-section').classList.add('hidden');
+    document.getElementById('quiz-section').classList.add('hidden');
+    document.getElementById('vocablist-section').classList.add('hidden');
+    document.getElementById('start-section').classList.remove('hidden');
+}
+
+let cardList = [];
+let cardIndex = 0;
+
+function showVocabList() {
+    document.getElementById('start-section').classList.add('hidden');
+    document.getElementById('vocablist-section').classList.remove('hidden');
+    cardList = [...vocabulary];
+    cardIndex = 0;
+    renderCard();
+}
+
+function renderCard() {
+    const item = cardList[cardIndex];
+    document.getElementById('fc-word').textContent = item.word;
+    document.getElementById('fc-pron').textContent = item.pron;
+    document.getElementById('fc-meaning').textContent = item.meaning;
+    document.getElementById('fc-syn').textContent = '유의어: ' + item.syn;
+    document.getElementById('fc-tip').textContent = '💡 ' + item.tip;
+    document.getElementById('card-current').textContent = cardIndex + 1;
+    document.getElementById('card-total').textContent = cardList.length;
+    document.getElementById('prev-btn').disabled = cardIndex === 0;
+    document.getElementById('next-btn').disabled = cardIndex === cardList.length - 1;
+}
+
+function prevCard() {
+    if (cardIndex > 0) { cardIndex--; renderCard(); }
+}
+
+function nextCard() {
+    if (cardIndex < cardList.length - 1) { cardIndex++; renderCard(); }
+}
+
+function shuffleCards() {
+    for (let i = cardList.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cardList[i], cardList[j]] = [cardList[j], cardList[i]];
+    }
+    cardIndex = 0;
+    renderCard();
+}
+
+function flipCard() {
+    // 카드 클릭시 다음으로 넘어가기
+    if (cardIndex < cardList.length - 1) { cardIndex++; renderCard(); }
+}
+
+function getVoice(lang) {
+    const voices = speechSynthesis.getVoices();
+    if (lang === 'en') {
+        return voices.find(v => v.lang.includes('en') && v.name.includes('Google')) ||
+               voices.find(v => v.lang.includes('en-US')) ||
+               voices.find(v => v.lang.includes('en'));
+    } else {
+        return voices.find(v => v.lang.includes('ko') && v.name.includes('Google')) ||
+               voices.find(v => v.lang.includes('ko'));
+    }
+}
+
+function speakWord() {
+    speechSynthesis.cancel();
+    const item = cardList[cardIndex];
+    const utterance = new SpeechSynthesisUtterance(item.word);
+    utterance.voice = getVoice('en');
+    utterance.lang = 'en-US';
+    utterance.rate = 0.85;
+    utterance.pitch = 1;
+    speechSynthesis.speak(utterance);
+}
+
+function speakMeaning() {
+    speechSynthesis.cancel();
+    const item = cardList[cardIndex];
+    const meaning = item.meaning.replace(/[\/,]/g, ' ');
+    const utterance = new SpeechSynthesisUtterance(meaning);
+    utterance.voice = getVoice('ko');
+    utterance.lang = 'ko-KR';
+    utterance.rate = 0.9;
+    speechSynthesis.speak(utterance);
+}
+
+function speakBoth() {
+    speechSynthesis.cancel();
+    const item = cardList[cardIndex];
+    
+    const wordUtterance = new SpeechSynthesisUtterance(item.word);
+    wordUtterance.voice = getVoice('en');
+    wordUtterance.lang = 'en-US';
+    wordUtterance.rate = 0.85;
+    
+    const meaning = item.meaning.replace(/[\/,]/g, ' ');
+    const meaningUtterance = new SpeechSynthesisUtterance(meaning);
+    meaningUtterance.voice = getVoice('ko');
+    meaningUtterance.lang = 'ko-KR';
+    meaningUtterance.rate = 0.9;
+    
+    wordUtterance.onend = () => {
+        setTimeout(() => speechSynthesis.speak(meaningUtterance), 600);
+    };
+    
+    speechSynthesis.speak(wordUtterance);
+}
+
+// 음성 목록 로드
+speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+
+// 자동 재생 관련 변수
+let isAutoPlaying = false;
+let currentRepeat = 0;
+let autoPlayTimeout = null;
+
+function toggleAutoPlay() {
+    if (isAutoPlaying) {
+        stopAutoPlay();
+    } else {
+        startAutoPlay();
+    }
+}
+
+function startAutoPlay() {
+    isAutoPlaying = true;
+    currentRepeat = 0;
+    document.getElementById('auto-btn').classList.add('active');
+    document.getElementById('auto-btn').textContent = '🔁 재생중...';
+    playCurrentCard();
+}
+
+function stopAutoPlay() {
+    isAutoPlaying = false;
+    currentRepeat = 0;
+    speechSynthesis.cancel();
+    if (autoPlayTimeout) clearTimeout(autoPlayTimeout);
+    document.getElementById('auto-btn').classList.remove('active');
+    document.getElementById('auto-btn').textContent = '🔁 자동 재생';
+    document.getElementById('repeat-status').textContent = '';
+}
+
+function playCurrentCard() {
+    if (!isAutoPlaying) return;
+    
+    const repeatCount = parseInt(document.getElementById('repeat-count').value);
+    const interval = parseInt(document.getElementById('repeat-interval').value) * 1000;
+    
+    currentRepeat++;
+    document.getElementById('repeat-status').textContent = `🔄 ${currentRepeat}/${repeatCount}회 재생중...`;
+    
+    const item = cardList[cardIndex];
+    
+    // 영어 단어 재생
+    const wordUtterance = new SpeechSynthesisUtterance(item.word);
+    wordUtterance.voice = getVoice('en');
+    wordUtterance.lang = 'en-US';
+    wordUtterance.rate = 0.85;
+    
+    const meaning = item.meaning.replace(/[\/,]/g, ' ');
+    const meaningUtterance = new SpeechSynthesisUtterance(meaning);
+    meaningUtterance.voice = getVoice('ko');
+    meaningUtterance.lang = 'ko-KR';
+    meaningUtterance.rate = 0.9;
+    
+    wordUtterance.onend = () => {
+        if (!isAutoPlaying) return;
+        setTimeout(() => {
+            if (!isAutoPlaying) return;
+            speechSynthesis.speak(meaningUtterance);
+        }, 500);
+    };
+    
+    meaningUtterance.onend = () => {
+        if (!isAutoPlaying) return;
+        
+        if (currentRepeat < repeatCount) {
+            // 반복 횟수 남음 - 간격 후 다시 재생
+            autoPlayTimeout = setTimeout(() => playCurrentCard(), interval);
+        } else {
+            // 반복 완료 - 다음 카드로
+            currentRepeat = 0;
+            if (cardIndex < cardList.length - 1) {
+                cardIndex++;
+                renderCard();
+                autoPlayTimeout = setTimeout(() => playCurrentCard(), interval);
+            } else {
+                // 마지막 카드 완료
+                stopAutoPlay();
+                document.getElementById('repeat-status').textContent = '✅ 전체 재생 완료!';
+            }
+        }
+    };
+    
+    speechSynthesis.speak(wordUtterance);
+}
+
+function startQuiz(mode) {
+    currentMode = mode;
+    currentQuestion = 0;
+    score = 0;
+    
+    if (!generateQuestions()) return;
+    
+    document.getElementById('mode-badge').textContent = mode === 'word' ? '🔤 단어 → 뜻' : '📝 뜻 → 단어';
+    document.getElementById('score').textContent = 0;
+    document.getElementById('start-section').classList.add('hidden');
+    document.getElementById('quiz-section').classList.remove('hidden');
+    document.getElementById('result-section').classList.add('hidden');
+    
+    showQuestion();
+}
+
+loadCheckedWords();
+renderChecklist();
+</script>
+</body>
+</html>
