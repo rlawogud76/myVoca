@@ -6,66 +6,79 @@
     <title>영어 단어 학습</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        .container { background: white; border-radius: 20px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 10px; }
+        .container { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 700px; width: 100%; max-height: 95vh; overflow-y: auto; }
         .hidden { display: none !important; }
-        .btn { padding: 15px 30px; font-size: 16px; border: none; border-radius: 10px; cursor: pointer; background: linear-gradient(135deg, #667eea, #764ba2); color: white; transition: all 0.2s; margin: 5px; }
+        .btn { padding: 12px 24px; font-size: 15px; border: none; border-radius: 10px; cursor: pointer; background: linear-gradient(135deg, #667eea, #764ba2); color: white; transition: all 0.2s; margin: 5px; }
         .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4); }
         .btn-secondary { background: linear-gradient(135deg, #ff9800, #f57c00); }
-        .btn-small { padding: 10px 20px; font-size: 14px; }
-        .start-section { text-align: center; padding: 20px; }
-        .start-section h1 { font-size: 32px; margin-bottom: 15px; color: #333; }
-        .start-section p { color: #666; margin-bottom: 20px; }
-        .wordlist-selector { margin: 20px 0; }
-        .wordlist-selector select { padding: 12px 20px; font-size: 16px; border: 2px solid #e0e0e0; border-radius: 10px; min-width: 200px; }
-        .mode-buttons { display: flex; flex-direction: column; gap: 15px; align-items: center; margin-bottom: 20px; }
-        .mode-btn { width: 100%; max-width: 300px; padding: 20px; border: 2px solid #e0e0e0; border-radius: 15px; background: white; cursor: pointer; transition: all 0.2s; text-align: left; }
-        .mode-btn:hover { border-color: #667eea; transform: translateY(-3px); box-shadow: 0 8px 25px rgba(102,126,234,0.2); }
-        .mode-btn h3 { color: #333; margin-bottom: 5px; }
-        .mode-btn p { color: #888; font-size: 13px; margin: 0; }
-        .checklist-section { margin-top: 20px; }
-        .checklist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
-        .checklist-header h3 { color: #333; }
-        .checklist-stats { color: #666; font-size: 14px; }
-        .checklist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 10px; padding: 15px; }
-        .checklist-item { display: flex; align-items: center; gap: 8px; padding: 8px; background: #f8f9fa; border-radius: 8px; cursor: pointer; font-size: 14px; }
+        .btn-small { padding: 8px 16px; font-size: 13px; }
+        .start-section { text-align: center; padding: 10px; }
+        .start-section h1 { font-size: 24px; margin-bottom: 12px; color: #333; }
+        .start-section p { color: #666; margin-bottom: 15px; font-size: 14px; }
+        .wordlist-selector { margin: 15px 0; }
+        .wordlist-selector select { padding: 10px 15px; font-size: 14px; border: 2px solid #e0e0e0; border-radius: 10px; width: 100%; max-width: 300px; }
+        .mode-buttons { display: flex; flex-direction: column; gap: 12px; align-items: center; margin-bottom: 15px; }
+        .mode-btn { width: 100%; max-width: 350px; padding: 15px; border: 2px solid #e0e0e0; border-radius: 12px; background: white; cursor: pointer; transition: all 0.2s; text-align: left; }
+        .mode-btn:hover { border-color: #667eea; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.2); }
+        .mode-btn h3 { color: #333; margin-bottom: 4px; font-size: 16px; }
+        .mode-btn p { color: #888; font-size: 12px; margin: 0; }
+        .checklist-section { margin-top: 15px; }
+        .checklist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+        .checklist-header h3 { color: #333; font-size: 16px; }
+        .checklist-stats { color: #666; font-size: 13px; }
+        .checklist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; max-height: 180px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 10px; padding: 12px; }
+        .checklist-item { display: flex; align-items: center; gap: 6px; padding: 6px; background: #f8f9fa; border-radius: 6px; cursor: pointer; font-size: 12px; }
         .checklist-item:hover { background: #e9ecef; }
         .checklist-item.checked { background: #d4edda; text-decoration: line-through; color: #888; }
-        .checklist-item input { width: 16px; height: 16px; }
-        .checklist-actions { margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-        .study-header { text-align: center; margin-bottom: 20px; }
-        .mode-badge { display: inline-block; padding: 10px 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 25px; font-size: 16px; margin-bottom: 12px; font-weight: 600; }
-        .study-counter { font-size: 18px; color: #4b5563; font-weight: 500; }
-        .card { background: linear-gradient(135deg, #f8f9ff 0%, #e8edff 100%); border-radius: 20px; padding: 35px; margin-bottom: 20px; text-align: center; min-height: 200px; }
-        .card-main { font-size: 38px; font-weight: bold; color: #111; margin-bottom: 12px; letter-spacing: 1px; }
-        .card-main.meaning-mode { font-size: 24px; line-height: 1.6; color: #111; }
-        .card-pron { font-size: 18px; color: #333; font-style: italic; margin-bottom: 18px; }
-        .card-answer { font-size: 26px; color: #111; margin-bottom: 12px; padding: 18px; background: rgba(255,255,255,0.85); border-radius: 12px; font-weight: 500; }
-        .card-syn { font-size: 15px; color: #444; margin-bottom: 12px; }
-        .example-box { margin-top: 18px; padding: 18px; background: #fef3c7; border-radius: 12px; font-size: 16px; color: #111; border-left: 5px solid #f59e0b; text-align: left; line-height: 1.9; }
-        .study-actions { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .nav-buttons { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; }
-        .word-jump { text-align: center; margin-bottom: 20px; }
-        .word-jump select { padding: 10px 15px; font-size: 14px; border: 2px solid #e0e0e0; border-radius: 10px; min-width: 200px; }
-        .repeat-settings { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
-        .repeat-settings label { color: #666; font-size: 14px; }
-        .repeat-settings select, .repeat-settings input { padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; width: 70px; }
-        .repeat-status { text-align: center; color: #667eea; font-size: 14px; margin-bottom: 10px; min-height: 20px; }
-        .sound-btns { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .sound-btn { padding: 10px 20px; font-size: 14px; border: 2px solid #667eea; border-radius: 25px; background: white; color: #667eea; cursor: pointer; transition: all 0.2s; }
+        .checklist-item input { width: 14px; height: 14px; flex-shrink: 0; }
+        .checklist-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .checklist-actions { margin-top: 12px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+        .study-header { text-align: center; margin-bottom: 15px; }
+        .mode-badge { display: inline-block; padding: 8px 16px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 20px; font-size: 14px; margin-bottom: 10px; font-weight: 600; }
+        .study-counter { font-size: 16px; color: #4b5563; font-weight: 500; }
+        .card { background: linear-gradient(135deg, #f8f9ff 0%, #e8edff 100%); border-radius: 15px; padding: 20px; margin-bottom: 15px; text-align: center; min-height: 150px; display: flex; flex-direction: column; justify-content: center; }
+        .card-main { font-size: 28px; font-weight: bold; color: #111; margin-bottom: 10px; letter-spacing: 0.5px; word-break: break-word; }
+        .card-main.meaning-mode { font-size: 20px; line-height: 1.5; color: #111; }
+        .card-pron { font-size: 15px; color: #333; font-style: italic; margin-bottom: 12px; }
+        .card-answer { font-size: 20px; color: #111; margin-bottom: 10px; padding: 12px; background: rgba(255,255,255,0.85); border-radius: 10px; font-weight: 500; word-break: break-word; }
+        .card-syn { font-size: 13px; color: #444; margin-bottom: 10px; }
+        .example-box { margin-top: 12px; padding: 12px; background: #fef3c7; border-radius: 10px; font-size: 13px; color: #111; border-left: 4px solid #f59e0b; text-align: left; line-height: 1.6; }
+        .study-actions { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .nav-buttons { display: flex; justify-content: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+        .word-jump { text-align: center; margin-bottom: 15px; }
+        .word-jump select { padding: 8px 12px; font-size: 13px; border: 2px solid #e0e0e0; border-radius: 8px; width: 100%; max-width: 250px; }
+        .repeat-settings { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+        .repeat-settings label { color: #666; font-size: 13px; }
+        .repeat-settings select, .repeat-settings input { padding: 6px 10px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 13px; width: 60px; }
+        .repeat-status { text-align: center; color: #667eea; font-size: 13px; margin-bottom: 8px; min-height: 18px; }
+        .sound-btns { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .sound-btn { padding: 8px 16px; font-size: 13px; border: 2px solid #667eea; border-radius: 20px; background: white; color: #667eea; cursor: pointer; transition: all 0.2s; }
         .sound-btn:hover, .sound-btn.active { background: #667eea; color: white; }
-        .quiz-options { display: flex; flex-direction: column; gap: 12px; margin: 20px 0; }
-        .quiz-option { padding: 18px 22px; border: 2px solid #e0e0e0; border-radius: 14px; background: white; cursor: pointer; transition: all 0.2s; text-align: left; font-size: 18px; color: #111; line-height: 1.5; }
+        .quiz-options { display: flex; flex-direction: column; gap: 10px; margin: 15px 0; }
+        .quiz-option { padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 10px; background: white; cursor: pointer; transition: all 0.2s; text-align: left; font-size: 15px; color: #111; line-height: 1.4; word-break: break-word; }
         .quiz-option:hover { border-color: #667eea; background: #f8f9ff; }
         .quiz-option.selected { border-color: #667eea; background: #e8edff; }
         .quiz-option.correct { border-color: #10b981; background: #d1fae5; color: #065f46; font-weight: 600; }
         .quiz-option.wrong { border-color: #ef4444; background: #fee2e2; color: #991b1b; }
         .quiz-option.show-correct { border-color: #10b981; background: #d1fae5; }
         .quiz-option:disabled { cursor: not-allowed; }
-        .quiz-result { text-align: center; padding: 18px; margin: 18px 0; border-radius: 12px; font-weight: bold; font-size: 18px; }
+        .quiz-result { text-align: center; padding: 12px; margin: 12px 0; border-radius: 10px; font-weight: bold; font-size: 15px; word-break: break-word; }
         .quiz-result.correct { background: #d1fae5; color: #065f46; }
         .quiz-result.wrong { background: #fee2e2; color: #991b1b; }
-        .score-display { text-align: center; font-size: 20px; color: #4f46e5; margin-bottom: 18px; font-weight: 600; }
+        .score-display { text-align: center; font-size: 17px; color: #4f46e5; margin-bottom: 15px; font-weight: 600; }
+        
+        @media (max-width: 480px) {
+            .container { padding: 15px; border-radius: 15px; }
+            .start-section h1 { font-size: 22px; }
+            .card-main { font-size: 24px; }
+            .card-main.meaning-mode { font-size: 18px; }
+            .quiz-option { font-size: 14px; padding: 10px 14px; }
+            .btn { padding: 10px 20px; font-size: 14px; }
+            .mode-btn { padding: 12px; }
+            .mode-btn h3 { font-size: 15px; }
+            .checklist-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+        }
     </style>
 </head>
 <body>
