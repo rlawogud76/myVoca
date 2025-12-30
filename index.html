@@ -212,12 +212,8 @@ function loadCheckedWords() { const s = localStorage.getItem(document.getElement
 
 function startStudy(mode) {
     currentMode = mode;
-    if(mode === 'listen') {
-        // 듣기 모드에서는 체크되지 않은 단어만 포함
-        studyWords = currentWordlist.filter((_, idx) => !checkedWords.has(idx));
-    } else {
-        studyWords = [...currentWordlist];
-    }
+    // 모든 모드에서 체크되지 않은 단어만 포함
+    studyWords = currentWordlist.filter((_, idx) => !checkedWords.has(idx));
     currentIndex = 0;
     correctCount = 0; wrongCount = 0; answered = false;
     if(mode === 'listen') { showSection('listen-section'); updateListenJumpSelect(); renderListenCard(); }
