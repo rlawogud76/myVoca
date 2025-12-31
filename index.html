@@ -90,8 +90,10 @@
                 <select id="wordlist-select" onchange="changeWordlist()">
                     <option value="list1">📘 단어장 1 (100개)</option>
                     <option value="list2">📗 단어장 2 (100개)</option>
+                    <option value="list3">📙 단어장 3 (100개)</option>
                     <option value="idioms1">💬 토익 숙어장 1 (100개)</option>
                     <option value="idioms2">💬 토익 숙어장 2 (100개)</option>
+                    <option value="idioms3">💬 토익 숙어장 3 (100개)</option>
                 </select>
             </div>
             <div class="mode-buttons">
@@ -187,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => { loadCheckedWords(); render
 
 function changeWordlist() {
     const v = document.getElementById('wordlist-select').value;
-    currentWordlist = v === 'list1' ? wordlist1 : v === 'list2' ? wordlist2 : v === 'idioms1' ? idioms1 : idioms2;
+    currentWordlist = v === 'list1' ? wordlist1 : v === 'list2' ? wordlist2 : v === 'list3' ? wordlist3 : v === 'idioms1' ? idioms1 : v === 'idioms2' ? idioms2 : idioms3;
     loadCheckedWords(); renderChecklist();
 }
 
